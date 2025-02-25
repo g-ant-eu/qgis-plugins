@@ -1,0 +1,7 @@
+[general]
+name=featurenavigator
+qgisMinimumVersion=3.10
+author=G-ANT
+email=https://www.g-ant.eu
+description=A simple plugin to navigate features
+version=1.0
