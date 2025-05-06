@@ -1,24 +1,23 @@
 #!/bin/bash
 
-# Exit on error
 set -e
 
 # Define plugin folders
 PLUGINS=("featurenavigator" "rasterfromvectorfieldloader")
 
-# Create releases directory if it doesn't exist
-mkdir -p releases
+# Create releases directory
+RELEASE_DIR="releases"
+mkdir -p "$RELEASE_DIR"
 
-# Loop over plugin directories and zip each one
+# Zip each plugin directory
 for plugin in "${PLUGINS[@]}"; do
     if [ -d "$plugin" ]; then
-        zip_name="releases/${plugin}.zip"
-        echo "Creating $zip_name..."
-        # Create the zip containing the entire folder
-        (cd "$(dirname "$plugin")" && zip -r "../$zip_name" "$(basename "$plugin")")
+        zip_path="${RELEASE_DIR}/${plugin}.zip"
+        echo "Creating $zip_path..."
+        zip -r "$zip_path" "$plugin"
     else
         echo "Directory $plugin does not exist!"
     fi
 done
 
-echo "All plugins have been zipped into the 'releases/' folder."
+echo "✅ All plugins zipped into '$RELEASE_DIR/'."

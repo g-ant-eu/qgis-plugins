@@ -9,6 +9,7 @@ class FeatureNavigatorPlugin(QDialog, Ui_Dialog):
         self.iface = iface
         
         self.setupUi(self)
+        self.setWindowTitle("Navigate features of a vector layer")
 
         # Connect buttons to actions
         self.loadLayerButton.clicked.connect(self.load_layer)

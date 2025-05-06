@@ -3,6 +3,7 @@ from qgis.core import QgsProject, QgsRasterLayer, QgsVectorLayer
 from qgis.utils import iface
 import os
 from .rasterfromvectorfieldloader_dialog import Ui_Dialog
+from qgis.PyQt.QtCore import QSettings
 
 class RasterLoaderPlugin(QDialog, Ui_Dialog):
     def __init__(self, iface):
@@ -10,6 +11,15 @@ class RasterLoaderPlugin(QDialog, Ui_Dialog):
         self.iface = iface
         
         self.setupUi(self)
+        self.setWindowTitle("Load Rasters from Vector Field")
+
+        # Restore previous settings
+        settings = QSettings()
+        last_folder = settings.value("RasterFieldLoader/lastFolder", "")
+        last_field = settings.value("RasterFieldLoader/lastField", "")
+
+        self.lineEditRasterFolder.setText(last_folder)
+        self.lineEditFieldName.setText(last_field)
 
         self.pushButtonBrowse.clicked.connect(self.browse_folder)
         self.pushButtonLoad.clicked.connect(self.load_rasters)
@@ -43,6 +53,10 @@ class RasterLoaderPlugin(QDialog, Ui_Dialog):
         raster_folder = self.lineEditRasterFolder.text().strip()
         field_name = self.lineEditFieldName.text().strip()
 
+        settings = QSettings()
+        settings.setValue("RasterFieldLoader/lastFolder", raster_folder)
+        settings.setValue("RasterFieldLoader/lastField", field_name)
+
         if not os.path.isdir(raster_folder):
             iface.messageBar().pushWarning("Invalid Folder", "Please select a valid raster folder.")
             return
@@ -62,11 +76,11 @@ class RasterLoaderPlugin(QDialog, Ui_Dialog):
 
             for feature in selected_features:
                 if field_name not in feature.fields().names():
-                    iface.messageBar().pushWarning("Field Missing", f"Field '{field_name}' not found in layer '{layer.name()}'")
+                    # iface.messageBar().pushWarning("Field Missing", f"Field '{field_name}' not found in layer '{layer.name()}'")
                     continue
 
                 raster_name = feature[field_name]
-                raster_path = os.path.join(raster_folder, f"{raster_name}.tif")
+                raster_path = os.path.join(raster_folder, raster_name)
 
                 if not os.path.exists(raster_path):
                     iface.messageBar().pushWarning("Raster Missing", f"Raster '{raster_name}' not found.")
