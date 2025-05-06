@@ -12,3 +12,9 @@ The ```feature_navigation_dialog.py``` is created using:
 ```
 pyuic5 -o feature_navigator_dialog.py feature-navigator_dialog_base.ui
 ```
+
+## Raster loader from vector field
+
+A QGIS plugin to load a rasters from the name contained in a vector field.
+
+Rasters are loaded from the selected features of the selected layers, if the field name is available.

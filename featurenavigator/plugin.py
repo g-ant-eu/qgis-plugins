@@ -21,15 +21,15 @@ class FeatureNavigatorPlugin(QDialog, Ui_Dialog):
 
     def initGui(self):
         """Initialize the plugin GUI (adds the action to QGIS)."""
-        self.action = QAction("FeatNav", self.iface.mainWindow())
+        self.action = QAction("G-FtNv", self.iface.mainWindow())
         self.action.triggered.connect(self.run)
 
-        self.iface.addPluginToMenu("&FeatNav", self.action)
+        self.iface.addPluginToMenu("&G-FtNv", self.action)
         self.iface.addToolBarIcon(self.action)
 
     def unload(self):
         """Remove the plugin from QGIS when it's disabled."""
-        self.iface.removePluginMenu("&FeatNav", self.action)
+        self.iface.removePluginMenu("&G-FtNv", self.action)
         self.iface.removeToolBarIcon(self.action)
 
     def run(self):

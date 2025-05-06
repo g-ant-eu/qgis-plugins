@@ -4,5 +4,5 @@ qgisMinimumVersion=3.10
 author=G-ANT
 description=A simple plugin to navigate features
 version=1.0
-repository=https://github.com/g-ant-eu/qgis-plugins
+repository=https://github.com/g-ant-eu/qgis-plugins/featurenavigator
 homepage=https://www.g-ant.eu
