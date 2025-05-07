@@ -2,7 +2,7 @@ from qgis.PyQt.QtWidgets import QDialog, QAction
 from qgis.core import QgsProject
 from qgis.utils import iface
 from .feature_navigator_dialog import Ui_Dialog
-from qgis.PyQt.QtCore import QSettings
+from qgis.PyQt.QtCore import Qt
 
 class FeatureNavigatorPlugin(QDialog, Ui_Dialog):
     def __init__(self, iface):
