@@ -3,6 +3,8 @@ from qgis.core import QgsProject
 from qgis.utils import iface
 from .feature_navigator_dialog import Ui_Dialog
 from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QIcon
+from .ui import IconfeatureNavigation
 
 class FeatureNavigatorPlugin(QDialog, Ui_Dialog):
     def __init__(self, iface):
@@ -25,15 +27,16 @@ class FeatureNavigatorPlugin(QDialog, Ui_Dialog):
 
     def initGui(self):
         """Initialize the plugin GUI (adds the action to QGIS)."""
-        self.action = QAction("G-FtNv", self.iface.mainWindow())
+        self.action = QAction(IconfeatureNavigation, "Navigate Features", self.iface.mainWindow())
+
         self.action.triggered.connect(self.run)
 
-        self.iface.addPluginToMenu("&G-FtNv", self.action)
+        self.iface.addPluginToMenu("&G-ANT", self.action)
         self.iface.addToolBarIcon(self.action)
 
     def unload(self):
         """Remove the plugin from QGIS when it's disabled."""
-        self.iface.removePluginMenu("&G-FtNv", self.action)
+        self.iface.removePluginMenu("&G-ANT", self.action)
         self.iface.removeToolBarIcon(self.action)
 
     def run(self):

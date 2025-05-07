@@ -6,6 +6,8 @@ from .rasterfromvectorfieldloader_dialog import Ui_Dialog
 from qgis.PyQt.QtCore import QSettings
 from qgis.PyQt.QtWidgets import QApplication
 from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QIcon
+from .ui import IconRasterLoader
 
 class RasterLoaderPlugin(QDialog, Ui_Dialog):
     def __init__(self, iface):
@@ -35,15 +37,17 @@ class RasterLoaderPlugin(QDialog, Ui_Dialog):
 
     def initGui(self):
         """Initialize the plugin GUI (adds the action to QGIS)."""
-        self.action = QAction("G-LdRst", self.iface.mainWindow())
+        # self.action = QAction("G-LdRst", self.iface.mainWindow())
+        self.action = QAction(IconRasterLoader, "Raster from vector loader", self.iface.mainWindow())
+
         self.action.triggered.connect(self.run)
 
-        self.iface.addPluginToMenu("&G-LdRst", self.action)
+        self.iface.addPluginToMenu("&G-ANT", self.action)
         self.iface.addToolBarIcon(self.action)
 
     def unload(self):
         """Remove the plugin from QGIS when it's disabled."""
-        self.iface.removePluginMenu("&G-LdRst", self.action)
+        self.iface.removePluginMenu("&G-ANT", self.action)
         self.iface.removeToolBarIcon(self.action)
 
     def run(self):
