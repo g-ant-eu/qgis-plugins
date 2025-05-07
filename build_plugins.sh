@@ -2,6 +2,8 @@
 
 set -e
 
+rm -rf ./releases
+
 # Define plugin folders
 PLUGINS=("featurenavigator" "rasterfromvectorfieldloader")
 
