@@ -109,8 +109,16 @@ class RasterLoaderPlugin(QDialog, Ui_Dialog):
 
             raster_path = os.path.join(raster_folder, raster_name)
             if not os.path.exists(raster_path):
-                iface.messageBar().pushWarning("Raster Missing", f"Raster '{raster_name}' not found.")
-                continue
+                # try to find in the folder anything that starts with that name and ends with .asc, .tif or .tiff
+                for f in os.listdir(raster_folder):
+                    if f.startswith(raster_name) and f.endswith(('.asc', '.tif', '.tiff')):
+                        raster_path = os.path.join(raster_folder, f)
+                        break
+
+                if raster_path is None or not os.path.exists(raster_path):
+                    iface.messageBar().pushWarning("Raster Missing", f"Raster '{raster_name}' not found.")
+                    continue
+
 
             if raster_path in loaded_rasters:
                 continue
