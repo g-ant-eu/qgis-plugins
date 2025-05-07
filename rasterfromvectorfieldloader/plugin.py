@@ -5,6 +5,7 @@ import os
 from .rasterfromvectorfieldloader_dialog import Ui_Dialog
 from qgis.PyQt.QtCore import QSettings
 from qgis.PyQt.QtWidgets import QApplication
+from qgis.PyQt.QtCore import Qt
 
 class RasterLoaderPlugin(QDialog, Ui_Dialog):
     def __init__(self, iface):
@@ -13,6 +14,8 @@ class RasterLoaderPlugin(QDialog, Ui_Dialog):
         
         self.setupUi(self)
         self.setWindowTitle("Load Rasters from Vector Field")
+        # Make the dialog stay on top without blocking interaction with QGIS
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
         # Restore previous settings
         settings = QSettings()

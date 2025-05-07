@@ -2,6 +2,7 @@ from qgis.PyQt.QtWidgets import QDialog, QAction
 from qgis.core import QgsProject
 from qgis.utils import iface
 from .feature_navigator_dialog import Ui_Dialog
+from qgis.PyQt.QtCore import QSettings
 
 class FeatureNavigatorPlugin(QDialog, Ui_Dialog):
     def __init__(self, iface):
@@ -10,6 +11,8 @@ class FeatureNavigatorPlugin(QDialog, Ui_Dialog):
         
         self.setupUi(self)
         self.setWindowTitle("Navigate features of a vector layer")
+
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
         # Connect buttons to actions
         self.loadLayerButton.clicked.connect(self.load_layer)
