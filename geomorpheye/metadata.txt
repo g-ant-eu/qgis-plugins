@@ -1,0 +1,8 @@
+[general]
+name=geomorpheye
+qgisMinimumVersion=3.10
+author=G-ANT
+description=A quick geomorphologic view on the raster
+version=1.0
+repository=https://github.com/g-ant-eu/qgis-plugins
+homepage=https://www.g-ant.eu

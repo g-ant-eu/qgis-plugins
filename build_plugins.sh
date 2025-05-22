@@ -5,7 +5,7 @@ set -e
 rm -rf ./releases
 
 # Define plugin folders
-PLUGINS=("featurenavigator" "rasterfromvectorfieldloader")
+PLUGINS=("featurenavigator" "rasterfromvectorfieldloader" "geomorpheye")
 
 # Create releases directory
 RELEASE_DIR="releases"
