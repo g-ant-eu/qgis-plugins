@@ -2,13 +2,14 @@ from qgis.PyQt.QtWidgets import QDialog, QAction
 from qgis.core import QgsProject, QgsRasterLayer, QgsCoordinateTransform, \
     QgsMapLayerType, QgsRectangle
 from qgis.PyQt.QtCore import QSettings
+from qgis.PyQt.QtCore import QObject, QEvent
 from PyQt5.QtGui import QColor
 from qgis.utils import iface
 from .geomorpheye_dialog import Ui_Dialog
 from qgis.PyQt.QtCore import Qt
 from .ui import IconGeomorphEye
 from .rasteroverlay import RasterOverlay
-
+import gc
 
 
 class GeomorphEyePlugin():
@@ -24,6 +25,7 @@ class GeomorphEyePlugin():
 
         self.iface.addPluginToMenu("&G-ANT", self.action)
         self.iface.addToolBarIcon(self.action)
+        
         self.dialog = None
 
     def unload(self):
@@ -61,6 +63,8 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         viewPit = self.isTrue(viewPit)
         viewValues = settings.value("GeomorphEye/viewValues", False)
         viewValues = self.isTrue(viewValues)
+        viewColRow = settings.value("GeomorphEye/viewColRow", False)
+        viewColRow = self.isTrue(viewColRow)
         viewBorders = settings.value("GeomorphEye/viewBorders", True)
         viewBorders = self.isTrue(viewBorders)
         viewColors = settings.value("GeomorphEye/viewColors", False)
@@ -80,6 +84,7 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         self.viewFlowCheckbox.toggled.connect(self.on_checkbox_changed)
         self.viewPitsCheckbox.toggled.connect(self.on_checkbox_changed)
         self.viewValuesCheckbox.toggled.connect(self.on_checkbox_changed)
+        self.viewColRowCheckbox.toggled.connect(self.on_checkbox_changed)
         self.viewBordersCheckbox.toggled.connect(self.on_checkbox_changed)
         self.viewColorsCheckbox.toggled.connect(self.on_checkbox_changed)
         self.fontSizeSpinBox.valueChanged.connect(self.on_fontsize_changed)
@@ -92,7 +97,23 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         self.buttonBox.accepted.connect(self.on_accept)
         self.buttonBox.rejected.connect(self.on_reject)
 
+        # canvas = self.iface.mapCanvas()
+        # canvas.extentsChanged.connect(self.on_pan)
+
         self.reset_ui()
+
+    def p(self, msg:str):
+        """Print message to QGIS message bar."""
+        if True:
+            print(msg)
+
+    def on_pan(self):
+        self.p("Panning...")
+        self.cleanup_overlay()
+        self.pushButtonLoad.setText("Load On-Screen Raster Info")
+        self.reset_ui()
+        # if self.rasterOverlayItem:
+        #     self.load_raster_info(reload=True)
 
     def on_accept(self):
         self.cleanup_overlay()
@@ -112,7 +133,6 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
             canvas.scene().removeItem(self.rasterOverlayItem)
             del self.rasterOverlayItem
             self.rasterOverlayItem = None
-
 
     def unload(self):
         self.cleanup_overlay()
@@ -135,28 +155,34 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         settings.setValue("GeomorphEye/viewValues", self.viewValuesCheckbox.isChecked())
         settings.setValue("GeomorphEye/viewBorders", self.viewBordersCheckbox.isChecked())
         settings.setValue("GeomorphEye/viewColors", self.viewColorsCheckbox.isChecked())
+        settings.setValue("GeomorphEye/viewColRow", self.viewColRowCheckbox.isChecked())
 
-        # Re-trigger the overlay if it's already visible
         if self.rasterOverlayItem:
-            self.load_raster_info(reload=True)
+            self.rasterOverlayItem.setDrawAttributes(
+                self.viewFlowCheckbox.isChecked(),
+                self.viewPitsCheckbox.isChecked(),
+                self.viewValuesCheckbox.isChecked(),
+                self.viewBordersCheckbox.isChecked(),
+                self.viewColorsCheckbox.isChecked(),
+                self.viewColRowCheckbox.isChecked()
+            )
     
     def on_fontsize_changed(self):
         # Save the current settings
         settings = QSettings()
         settings.setValue("GeomorphEye/fontSize", self.fontSizeSpinBox.value())
 
-        # Re-trigger the overlay if it's already visible
         if self.rasterOverlayItem:
-            self.load_raster_info(reload=True)
+            self.rasterOverlayItem.setFontSize(self.fontSizeSpinBox.value())
 
     def on_color_changed(self):
         # Save the current settings
         settings = QSettings()
         settings.setValue("GeomorphEye/cellBorderColor", self.cellBorderColorButton.color().name())
 
-        # Re-trigger the overlay if it's already visible
         if self.rasterOverlayItem:
-            self.load_raster_info(reload=True)
+            self.rasterOverlayItem.setBorderColor(self.cellBorderColorButton.color().name())
+            
 
 
     def load_raster_info(self, reload=False):
@@ -205,11 +231,15 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         rasterXres = rasterLayer.rasterUnitsPerPixelX()
         rasterYres = rasterLayer.rasterUnitsPerPixelY()
 
+        self.p(f"Raster extent: {rasterExtent}, cols: {rasterCols}, rows: {rasterRows}, xres: {rasterXres}, yres: {rasterYres}")
+
         # now the same for the canvas
         canvasNorth = canvasExtent.yMaximum()
         canvasSouth = canvasExtent.yMinimum()
         canvasWest = canvasExtent.xMinimum()
         canvasEast = canvasExtent.xMaximum()
+
+        self.p(f"Canvas extent: {canvasExtent}")
 
         # the reading extent is the intersection of the two extents
         doIntersect = canvasExtent.intersects(rasterExtent)
@@ -229,7 +259,7 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         if readSouth < canvasSouth:
             while readSouth < canvasSouth:
                 readSouth += rasterYres
-            readSouth -= rasterYres
+            readSouth -= rasterYres*2
 
         readWest = rasterWest
         if readWest < canvasWest:
@@ -241,11 +271,21 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         if readEast > canvasEast:
             while readEast > canvasEast:
                 readEast -= rasterXres
-            readEast += rasterXres
+            readEast += rasterXres*2
 
         readExtent = QgsRectangle(readWest, readSouth, readEast, readNorth)
         readCols = int(readExtent.width()/rasterXres)
         readRows = int(readExtent.height()/rasterYres)
+
+        self.p(f"Reading extent: {readExtent}, cols: {readCols}, rows: {readRows}, xres: {rasterXres}, yres: {rasterYres}")
+
+        if readCols*readRows > 10000:
+            iface.messageBar().pushWarning("Too many cells", "The selected extent is too large. Please select a smaller extent.")
+            self.reset_ui()
+            return
+
+
+        self.p(f"Reading raster data...")
         block = raster_provider.block(1, readExtent, readCols, readRows)
         if block is None:
             iface.messageBar().pushWarning("No Data", "No data found in the selected extent.")
@@ -254,6 +294,7 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         
         self.progressBar.setValue(50)
         
+        self.p(f"Raster data read. Processing data...")
         x_y_c_r_v_sink_dir_List  = []
         startWorldX = readWest + rasterXres / 2
         startWorldY = readNorth - rasterYres / 2
@@ -292,12 +333,18 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
                     br = block.value(row + 1, col + 1) if row < rasterRows - 1 and col < rasterCols - 1 else None
                     brDir = (br, 8)
                     allValues = [tl, tc, tr, cl, cr, bl, bc, br]
-                    # check sink
+                    # check sink: to be sink it needs to be the lowest value but also  be unique
                     isSink = True
                     for val in allValues:
                         if val is not None and val < value:
                             isSink = False
                             break
+                    if isSink:
+                        # check if the value is unique
+                        if allValues.count(value) > 1:
+                            isSink = False
+
+
                     # check steepest direction
                     steepestDir = None
                     steepestValue = None
@@ -307,9 +354,10 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
                             steepestDir = dir
                     
                     x_y_c_r_v_sink_dir_List.append((worldX, worldY, origCol, origRow, value, isSink, steepestDir))
+        self.p(f"Data processed. Elevation min: {elevMin}, max: {elevMax}")
 
-
-        overlay = RasterOverlay(canvas, rasterLayer,
+        self.p(f"Creating and adding overlay...")
+        overlay = RasterOverlay(canvas, 
                                 x_y_c_r_v_sink_dir_List,
                                 readExtent,
                                 rasterXres,
@@ -322,14 +370,16 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
                                 draw_flow=self.viewFlowCheckbox.isChecked(),
                                 draw_values=self.viewValuesCheckbox.isChecked(),
                                 draw_cells=self.viewBordersCheckbox.isChecked(),
-                                draw_colors=self.viewColorsCheckbox.isChecked()
+                                draw_colors=self.viewColorsCheckbox.isChecked(),
+                                draw_colrow=self.viewColRowCheckbox.isChecked()
                                 )
 
-        canvas.scene().addItem(overlay)
+        # canvas.scene().addItem(overlay)
         self.rasterOverlayItem = overlay
 
         self.pushButtonLoad.setText("Remove On-Screen Raster Info")
 
         self.progressBar.setValue(100)
 
+        self.p(f"Overlay added. Ready to go!")
         self.reset_ui()

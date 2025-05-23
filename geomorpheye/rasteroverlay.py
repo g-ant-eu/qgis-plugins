@@ -6,12 +6,12 @@ from qgis.core import QgsColorRampShader, QgsStyle
 import math
 
 class RasterOverlay(QgsMapCanvasItem):
-    def __init__(self, canvas:QgsMapCanvas, rasterLayer:QgsRasterLayer, x_y_c_r_v_sink_dir_List,
+    def __init__(self, canvas:QgsMapCanvas, x_y_c_r_v_sink_dir_List,
                  readExtent:QgsRectangle, xRes:float, yRes:float, elevMin:float, elevMax:float,
-                 fontSize, borderColor, draw_pits, draw_flow, draw_values, draw_cells, draw_colors):
+                 fontSize, borderColor, draw_pits, draw_flow, draw_values, draw_cells, draw_colors, draw_colrow):
+        print("=======> INITIALIZING RASTER OVERLAY1")
         super().__init__(canvas)
-        self.canvas = canvas
-        self.rasterLayer = rasterLayer
+        print("=======> INITIALIZING RASTER OVERLAY2")
         self.x_y_c_r_v_sink_dir_List = x_y_c_r_v_sink_dir_List
         self.readExtent = readExtent
         self.xRes = xRes
@@ -25,6 +25,7 @@ class RasterOverlay(QgsMapCanvasItem):
         self.draw_values = draw_values
         self.draw_cells = draw_cells
         self.draw_colors = draw_colors
+        self.draw_colrow = draw_colrow
         self.setZValue(1000)  # draw on top
 
         self.radiusRatio = 7
@@ -32,18 +33,41 @@ class RasterOverlay(QgsMapCanvasItem):
         self.flowLinesColorHex = "#1868C4"
         self.sinkColorHex = "#FF0000"
         self.haloColorHex = "#FFFFFF"
+        print("=======> INITIALIZING RASTER OVERLAY3")
 
     def boundingRect(self):
+        print("=======> BOUNDING RECT")
         top_left = self.toCanvasCoordinates(QgsPointXY(self.readExtent.xMinimum(), self.readExtent.yMaximum()))
         bottom_right = self.toCanvasCoordinates(QgsPointXY(self.readExtent.xMaximum(), self.readExtent.yMinimum()))
-        return QRectF(top_left, bottom_right)
+        bRect = QRectF(top_left, bottom_right)
+        print(f"=======> BOUNDING RECT2: {bRect}")
+        return bRect
+    
+    def setFontSize(self, fontSize):
+        self.fontSize = fontSize
+        self.update()
+
+    def setDrawAttributes(self, enable_flow, enable_pits, enable_values, enable_cells, enable_colors, enable_colrow):
+        self.draw_flow = enable_flow
+        self.draw_pits = enable_pits
+        self.draw_values = enable_values
+        self.draw_cells = enable_cells
+        self.draw_colors = enable_colors
+        self.draw_colrow = enable_colrow
+        self.update()
+        
+    def setBorderColor(self, color):
+        self.cellBorderColorHex = color
+        self.update()
 
     def paint(self, painter, option, widget):
+        print("=======> STARTING PAINTING")
         self.drawColor(painter)
         self.drawCells(painter)
         self.drawFlow(painter)
         self.drawSinks(painter)
         self.drawValues(painter)
+        print("=======> FINISHED PAINTING")
 
     def drawValues(self, painter):
         if self.draw_values:
@@ -55,8 +79,10 @@ class RasterOverlay(QgsMapCanvasItem):
                     lowerRight = self.toCanvasCoordinates(QgsPointXY(worldX + self.xRes/2, worldY - self.yRes/2))
                     rect = QRectF(upperLeft, lowerRight)
                     # write col, row and value below each other inside the cell
-                    text = f"c: {origCol}\nr: {origRow}\nv: {value}"
-
+                    if self.draw_colrow:
+                        text = f"c: {origCol}\nr: {origRow}\nv: {value}"
+                    else:
+                        text = f"{value}"
 
                     for dx in [-1, 0, 1]:
                         for dy in [-1, 0, 1]:
