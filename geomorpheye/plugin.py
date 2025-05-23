@@ -2,6 +2,7 @@ from qgis.PyQt.QtWidgets import QDialog, QAction
 from qgis.core import QgsProject, QgsRasterLayer, QgsCoordinateTransform, \
     QgsMapLayerType, QgsRectangle
 from qgis.PyQt.QtCore import QSettings
+from PyQt5.QtGui import QColor
 from qgis.utils import iface
 from .geomorpheye_dialog import Ui_Dialog
 from qgis.PyQt.QtCore import Qt
@@ -26,6 +27,9 @@ class GeomorphEyePlugin():
         self.dialog = None
 
     def unload(self):
+        if self.dialog:
+            self.dialog.unload()
+            self.dialog = None
         """Remove the plugin from QGIS when it's disabled."""
         self.iface.removePluginMenu("&G-ANT", self.action)
         self.iface.removeToolBarIcon(self.action)
@@ -60,23 +64,57 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         viewBorders = self.isTrue(viewBorders)
         viewColors = settings.value("GeomorphEye/viewColors", False)
         viewColors = self.isTrue(viewColors)
+        fontSize = settings.value("GeomorphEye/fontSize", 14)
+        fontSize = int(fontSize)
+        cellBorderColor = settings.value("GeomorphEye/cellBorderColor", "#000000")
+
 
         self.viewFlowCheckbox.setChecked(viewFlow)
         self.viewPitsCheckbox.setChecked(viewPit)
         self.viewValuesCheckbox.setChecked(viewValues)
         self.viewBordersCheckbox.setChecked(viewBorders)
         self.viewColorsCheckbox.setChecked(viewColors)
+        self.fontSizeSpinBox.setValue(fontSize)
+        self.cellBorderColorButton.setColor(QColor(cellBorderColor))
         self.viewFlowCheckbox.toggled.connect(self.on_checkbox_changed)
         self.viewPitsCheckbox.toggled.connect(self.on_checkbox_changed)
         self.viewValuesCheckbox.toggled.connect(self.on_checkbox_changed)
         self.viewBordersCheckbox.toggled.connect(self.on_checkbox_changed)
         self.viewColorsCheckbox.toggled.connect(self.on_checkbox_changed)
+        self.fontSizeSpinBox.valueChanged.connect(self.on_fontsize_changed)
+        self.cellBorderColorButton.colorChanged.connect(self.on_color_changed)
 
         self.rasterLayerCombobox.setFilters(QgsMapLayerType.Raster)
 
         self.pushButtonLoad.clicked.connect(self.load_raster_info)
 
+        self.buttonBox.accepted.connect(self.on_accept)
+        self.buttonBox.rejected.connect(self.on_reject)
+
         self.reset_ui()
+
+    def on_accept(self):
+        self.cleanup_overlay()
+        self.accept()
+
+    def on_reject(self):
+        self.cleanup_overlay()
+        self.reject()
+
+    def closeEvent(self, event):
+        self.cleanup_overlay()
+        super().closeEvent(event)
+
+    def cleanup_overlay(self):
+        if self.rasterOverlayItem:
+            canvas = self.iface.mapCanvas()
+            canvas.scene().removeItem(self.rasterOverlayItem)
+            del self.rasterOverlayItem
+            self.rasterOverlayItem = None
+
+
+    def unload(self):
+        self.cleanup_overlay()
 
     def isTrue(self, value):
         """Check if the value is a string representation of True."""
@@ -100,13 +138,30 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         # Re-trigger the overlay if it's already visible
         if self.rasterOverlayItem:
             self.load_raster_info(reload=True)
+    
+    def on_fontsize_changed(self):
+        # Save the current settings
+        settings = QSettings()
+        settings.setValue("GeomorphEye/fontSize", self.fontSizeSpinBox.value())
+
+        # Re-trigger the overlay if it's already visible
+        if self.rasterOverlayItem:
+            self.load_raster_info(reload=True)
+
+    def on_color_changed(self):
+        # Save the current settings
+        settings = QSettings()
+        settings.setValue("GeomorphEye/cellBorderColor", self.cellBorderColorButton.color().name())
+
+        # Re-trigger the overlay if it's already visible
+        if self.rasterOverlayItem:
+            self.load_raster_info(reload=True)
 
 
     def load_raster_info(self, reload=False):
         canvas = self.iface.mapCanvas()
         if self.rasterOverlayItem:
-            canvas.scene().removeItem(self.rasterOverlayItem)
-            self.rasterOverlayItem = None
+            self.cleanup_overlay()
             if not reload:
                 self.pushButtonLoad.setText("Load On-Screen Raster Info")
                 self.reset_ui()
@@ -201,8 +256,8 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         x_y_c_r_v_sink_dir_List  = []
         startWorldX = readWest + rasterXres / 2
         startWorldY = readNorth - rasterYres / 2
-        for row in range(rasterRows):
-            for col in range(rasterCols):
+        for row in range(readRows):
+            for col in range(readCols):
                 value = block.value(row, col)
                 if value is not None:
                     worldX = startWorldX + col * rasterXres
@@ -251,6 +306,8 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
                                 readExtent,
                                 rasterXres,
                                 rasterYres,
+                                fontSize=self.fontSizeSpinBox.value(),
+                                borderColor=self.cellBorderColorButton.color().name(),
                                 draw_pits=self.viewPitsCheckbox.isChecked(),
                                 draw_flow=self.viewFlowCheckbox.isChecked(),
                                 draw_values=self.viewValuesCheckbox.isChecked(),
