@@ -29,6 +29,7 @@ class GeomorphEyePlugin():
     def unload(self):
         if self.dialog:
             self.dialog.unload()
+            del self.dialog
             self.dialog = None
         """Remove the plugin from QGIS when it's disabled."""
         self.iface.removePluginMenu("&G-ANT", self.action)
@@ -256,10 +257,17 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         x_y_c_r_v_sink_dir_List  = []
         startWorldX = readWest + rasterXres / 2
         startWorldY = readNorth - rasterYres / 2
+        elevMin = 99999999999
+        elevMax = -99999999999
         for row in range(readRows):
             for col in range(readCols):
                 value = block.value(row, col)
                 if value is not None:
+                    # get min and max
+                    elevMin = min(elevMin, value)
+                    elevMax = max(elevMax, value)
+
+                    # get the world coordinates
                     worldX = startWorldX + col * rasterXres
                     worldY = startWorldY - row * rasterYres
                     # get the orig raster row and col
@@ -306,6 +314,8 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
                                 readExtent,
                                 rasterXres,
                                 rasterYres,
+                                elevMin,
+                                elevMax,
                                 fontSize=self.fontSizeSpinBox.value(),
                                 borderColor=self.cellBorderColorButton.color().name(),
                                 draw_pits=self.viewPitsCheckbox.isChecked(),
