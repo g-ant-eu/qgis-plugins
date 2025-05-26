@@ -1,5 +1,5 @@
 from qgis.PyQt.QtWidgets import QDialog, QAction
-from qgis.core import QgsProject
+from qgis.core import QgsProject, QgsMapLayerType
 from qgis.utils import iface
 from .feature_navigator_dialog import Ui_Dialog
 from qgis.PyQt.QtCore import Qt
@@ -21,6 +21,8 @@ class FeatureNavigatorPlugin(QDialog, Ui_Dialog):
         self.previousButton.clicked.connect(self.previous_feature)
         self.nextButton.clicked.connect(self.next_feature)
         
+        self.vectorComboSelector.setFilters(QgsMapLayerType.Vector)
+
         self.layer = None
         self.features = []
         self.current_index = -1

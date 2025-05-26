@@ -1,6 +1,6 @@
 from qgis.PyQt.QtWidgets import QDialog, QAction
 from qgis.core import QgsProject, QgsRasterLayer, QgsCoordinateTransform, \
-    QgsMapLayerType, QgsRectangle
+    QgsMapLayerType, QgsRectangle, QgsPointXY
 from qgis.PyQt.QtCore import QSettings
 from qgis.PyQt.QtCore import QObject, QEvent
 from PyQt5.QtGui import QColor
@@ -259,7 +259,7 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         if readSouth < canvasSouth:
             while readSouth < canvasSouth:
                 readSouth += rasterYres
-            readSouth -= rasterYres*2
+            readSouth -= rasterYres
 
         readWest = rasterWest
         if readWest < canvasWest:
@@ -271,7 +271,8 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         if readEast > canvasEast:
             while readEast > canvasEast:
                 readEast -= rasterXres
-            readEast += rasterXres*2
+            readEast += rasterXres
+
 
         readExtent = QgsRectangle(readWest, readSouth, readEast, readNorth)
         readCols = int(readExtent.width()/rasterXres)
@@ -281,14 +282,6 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
 
         if readCols*readRows > 10000:
             iface.messageBar().pushWarning("Too many cells", "The selected extent is too large. Please select a smaller extent.")
-            self.reset_ui()
-            return
-
-
-        self.p(f"Reading raster data...")
-        block = raster_provider.block(1, readExtent, readCols, readRows)
-        if block is None:
-            iface.messageBar().pushWarning("No Data", "No data found in the selected extent.")
             self.reset_ui()
             return
         
@@ -302,37 +295,41 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         elevMax = -99999999999
         for row in range(readRows):
             for col in range(readCols):
-                value = block.value(row, col)
+                # get the world coordinates
+                worldX = startWorldX + col * rasterXres
+                worldY = startWorldY - row * rasterYres
+                # get the orig raster row and col
+                origRow = int((rasterNorth - worldY) / rasterYres)
+                origCol = int((worldX - rasterWest) / rasterXres)
+
+                result = raster_provider.sample(QgsPointXY(worldX, worldY), 1)
+                value = None
+                if result[1]:
+                    value = result[0]
                 if value is not None:
                     # get min and max
                     elevMin = min(elevMin, value)
                     elevMax = max(elevMax, value)
 
-                    # get the world coordinates
-                    worldX = startWorldX + col * rasterXres
-                    worldY = startWorldY - row * rasterYres
-                    # get the orig raster row and col
-                    origRow = int((rasterNorth - worldY) / rasterYres)
-                    origCol = int((worldX - rasterWest) / rasterXres)
                     
                     # get surrounding cells
-                    tl = block.value(row - 1, col - 1) if row > 0 and col > 0 else None
-                    tlDir = (tl, 4)
-                    tc = block.value(row - 1, col) if row > 0 else None
-                    tcDir = (tc, 3)
-                    tr = block.value(row - 1, col + 1) if row > 0 and col < rasterCols - 1 else None
-                    trDir = (tr, 2)
-                    cl = block.value(row, col - 1) if col > 0 else None
-                    clDir = (cl, 5)
-                    cr = block.value(row, col + 1) if col < rasterCols - 1 else None
-                    crDir = (cr, 1)
-                    bl = block.value(row + 1, col - 1) if row < rasterRows - 1 and col > 0 else None
-                    blDir = (bl, 6)
-                    bc = block.value(row + 1, col) if row < rasterRows - 1 else None
-                    bcDir = (bc, 7)
-                    br = block.value(row + 1, col + 1) if row < rasterRows - 1 and col < rasterCols - 1 else None
-                    brDir = (br, 8)
-                    allValues = [tl, tc, tr, cl, cr, bl, bc, br]
+                    tl = raster_provider.sample(QgsPointXY(worldX - rasterXres, worldY + rasterYres), 1)
+                    tlDir = (tl[0], 4) if tl[1] else (None, 4)
+                    tc = raster_provider.sample(QgsPointXY(worldX, worldY + rasterYres), 1)
+                    tcDir = (tc[0], 3) if tc[1] else (None, 3)
+                    tr = raster_provider.sample(QgsPointXY(worldX + rasterXres, worldY + rasterYres), 1)
+                    trDir = (tr[0], 2) if tr[1] else (None, 2)
+                    cl = raster_provider.sample(QgsPointXY(worldX - rasterXres, worldY), 1)
+                    clDir = (cl[0], 5) if cl[1] else (None, 5)
+                    cr = raster_provider.sample(QgsPointXY(worldX + rasterXres, worldY), 1)
+                    crDir = (cr[0], 1) if cr[1] else (None, 1)
+                    bl = raster_provider.sample(QgsPointXY(worldX - rasterXres, worldY - rasterYres), 1)
+                    blDir = (bl[0], 6) if bl[1] else (None, 6)
+                    bc = raster_provider.sample(QgsPointXY(worldX, worldY - rasterYres), 1)
+                    bcDir = (bc[0], 7) if bc[1] else (None, 7)
+                    br = raster_provider.sample(QgsPointXY(worldX + rasterXres, worldY - rasterYres), 1)
+                    brDir = (br[0], 8) if br[1] else (None, 8)
+                    allValues = [tlDir[0], tcDir[0], trDir[0], clDir[0], crDir[0], blDir[0], bcDir[0], brDir[0]]
                     # check sink: to be sink it needs to be the lowest value but also  be unique
                     isSink = True
                     for val in allValues:
