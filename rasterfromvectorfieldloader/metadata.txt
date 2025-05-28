@@ -5,4 +5,4 @@ author=G-ANT
 description=A simple plugin load rasters from the name in a field of a vector layer
 version=1.0
 repository=https://github.com/g-ant-eu/qgis-plugins
-homepage=https://www.g-ant.eu
+homepage=https://g-ant.eu

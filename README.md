@@ -18,3 +18,23 @@ pyuic5 -o feature_navigator_dialog.py feature-navigator_dialog_base.ui
 A QGIS plugin to load a rasters from the name contained in a vector field.
 
 Rasters are loaded from the selected features of the selected layers, if the field name is available.
+
+
+## Geomorphologic Eye
+
+A QGIS plugin that gives a quick and simple view on a raster layer. 
+It enables:
+
+* a local colormap for better understanding the landscape
+* visualization of steepest direction and sinks
+* visualization of cell values and row/col in the original raster
+* visualization of cell borders
+
+For example, you can see this DEM:
+
+![DEM](imgs/geomorpheye_01.png)
+
+like this:
+
+
+![Geomorphologic Eye](imgs/geomorpheye_02.png)
