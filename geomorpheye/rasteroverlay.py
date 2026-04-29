@@ -42,6 +42,15 @@ class RasterOverlay(QgsMapCanvasItem):
         # pan/zoom, making Qt's scene BSP index stale and causing crashes on removeItem().
         return QRectF(QPointF(0, 0), QSizeF(self._canvas.size()))
     
+    def updateData(self, x_y_c_r_v_sink_dir_List, readExtent, xRes, yRes, elevMin, elevMax):
+        self.x_y_c_r_v_sink_dir_List = x_y_c_r_v_sink_dir_List
+        self.readExtent = readExtent
+        self.xRes = xRes
+        self.yRes = yRes
+        self.elevMin = elevMin
+        self.elevMax = elevMax
+        self.update()
+
     def setFontSize(self, fontSize):
         self.fontSize = fontSize
         self.update()
