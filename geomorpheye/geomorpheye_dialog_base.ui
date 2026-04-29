@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>449</height>
+    <height>530</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>50</x>
-     <y>410</y>
+     <y>492</y>
      <width>341</width>
      <height>32</height>
     </rect>
@@ -58,11 +58,92 @@
     <bool>false</bool>
    </property>
   </widget>
+  <widget class="QFrame" name="navigateSeparator">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>372</y>
+     <width>371</width>
+     <height>2</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::HLine</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Sunken</enum>
+   </property>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>380</y>
+     <width>371</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_navigate">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QLabel" name="colLabel">
+      <property name="text">
+       <string>Col:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QSpinBox" name="colSpinBox">
+      <property name="maximum">
+       <number>999999</number>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="rowLabel">
+      <property name="text">
+       <string>Row:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QSpinBox" name="rowSpinBox">
+      <property name="maximum">
+       <number>999999</number>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QPushButton" name="pushButtonZoomTo">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>416</y>
+     <width>371</width>
+     <height>34</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Zoom To Cell</string>
+   </property>
+  </widget>
   <widget class="QProgressBar" name="progressBar">
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>370</y>
+     <y>456</y>
      <width>371</width>
      <height>23</height>
     </rect>

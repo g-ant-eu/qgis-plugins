@@ -80,6 +80,7 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
 
         self.rasterLayerCombobox.setFilters(QgsMapLayerType.Raster)
         self.pushButtonLoad.clicked.connect(self.load_raster_info)
+        self.pushButtonZoomTo.clicked.connect(self.zoom_to_cell)
         self.buttonBox.accepted.connect(self.on_accept)
         self.buttonBox.rejected.connect(self.on_reject)
 
@@ -158,6 +159,22 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         settings.setValue("GeomorphEye/cellBorderColor", self.cellBorderColorButton.color().name())
         if self.rasterOverlayItem:
             self.rasterOverlayItem.setBorderColor(self.cellBorderColorButton.color().name())
+
+    def zoom_to_cell(self):
+        rasterLayer = self.rasterLayerCombobox.currentLayer()
+        if not rasterLayer or not isinstance(rasterLayer, QgsRasterLayer):
+            iface.messageBar().pushWarning("No Raster Layer", "Please select a raster layer first.")
+            return
+        col = self.colSpinBox.value()
+        row = self.rowSpinBox.value()
+        rasterExtent = rasterLayer.extent()
+        xRes = rasterLayer.rasterUnitsPerPixelX()
+        yRes = rasterLayer.rasterUnitsPerPixelY()
+        worldX = rasterExtent.xMinimum() + (col + 0.5) * xRes
+        worldY = rasterExtent.yMaximum() - (row + 0.5) * yRes
+        canvas = self.iface.mapCanvas()
+        canvas.setCenter(QgsPointXY(worldX, worldY))
+        canvas.refresh()
 
     # ------------------------------------------------------------------ #
     #  Auto-refresh on pan / zoom                                         #

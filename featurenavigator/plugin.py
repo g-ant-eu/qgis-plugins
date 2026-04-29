@@ -5,6 +5,7 @@ from .feature_navigator_dialog import Ui_Dialog
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from .ui import IconfeatureNavigation
+from qgis.core import QgsMapLayerProxyModel
 
 class FeatureNavigatorPlugin(QDialog, Ui_Dialog):
     def __init__(self, iface):
@@ -21,7 +22,8 @@ class FeatureNavigatorPlugin(QDialog, Ui_Dialog):
         self.previousButton.clicked.connect(self.previous_feature)
         self.nextButton.clicked.connect(self.next_feature)
         
-        self.vectorComboSelector.setFilters(QgsMapLayerType.Vector)
+        # self.vectorComboSelector.setFilters(QgsMapLayerType.Vector)
+        self.vectorComboSelector.setFilters(QgsMapLayerProxyModel.VectorLayer)
 
         self.layer = None
         self.features = []
@@ -44,6 +46,14 @@ class FeatureNavigatorPlugin(QDialog, Ui_Dialog):
     def run(self):
         """Show the plugin dialog when triggered."""
         self.show()
+
+        # Try to auto-load the currently selected vector layer
+        current_layer = self.iface.activeLayer()
+        if current_layer:# and current_layer.type() == QgsMapLayerProxyModel.VectorLayer:
+            # Set combo selector to the active layer
+            self.vectorComboSelector.setLayer(current_layer)
+            # Load layer features, update UI, etc.
+            self.load_layer()
 
     def load_layer(self):
         """Load selected layer and initialize feature navigation."""
