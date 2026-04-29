@@ -6,3 +6,4 @@ description=A quick geomorphologic view on the raster
 version=1.1
 repository=https://github.com/g-ant-eu/qgis-plugins
 homepage=https://g-ant.eu
+icon=ui/geomorpheye.svg

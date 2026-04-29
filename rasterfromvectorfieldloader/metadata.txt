@@ -6,3 +6,4 @@ description=A simple plugin load rasters from the name in a field of a vector la
 version=1.0
 repository=https://github.com/g-ant-eu/qgis-plugins
 homepage=https://g-ant.eu
+icon=ui/add_raster.svg
