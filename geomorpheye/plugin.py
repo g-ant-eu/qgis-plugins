@@ -9,7 +9,7 @@ from .geomorpheye_dialog import Ui_Dialog
 from qgis.PyQt.QtCore import Qt
 from .ui import IconGeomorphEye
 from .rasteroverlay import RasterOverlay
-import gc
+from qgis.PyQt import sip
 
 
 class GeomorphEyePlugin():
@@ -131,7 +131,7 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         if self.rasterOverlayItem:
             canvas = self.iface.mapCanvas()
             canvas.scene().removeItem(self.rasterOverlayItem)
-            del self.rasterOverlayItem
+            sip.delete(self.rasterOverlayItem)
             self.rasterOverlayItem = None
 
     def unload(self):

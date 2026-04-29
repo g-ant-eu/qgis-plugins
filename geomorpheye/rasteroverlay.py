@@ -1,7 +1,7 @@
 from qgis.gui import QgsMapCanvasItem, QgsMapCanvas
 from qgis.core import QgsPointXY, QgsRasterLayer, QgsRectangle
 from PyQt5.QtGui import QPainter, QColor, QPen, QFont
-from PyQt5.QtCore import QRectF, Qt
+from PyQt5.QtCore import QRectF, QPointF, QSizeF, Qt
 from qgis.core import QgsColorRampShader, QgsStyle
 import math
 
@@ -11,6 +11,7 @@ class RasterOverlay(QgsMapCanvasItem):
                  fontSize, borderColor, draw_pits, draw_flow, draw_values, draw_cells, draw_colors, draw_colrow):
         print("=======> INITIALIZING RASTER OVERLAY1")
         super().__init__(canvas)
+        self._canvas = canvas
         print("=======> INITIALIZING RASTER OVERLAY2")
         self.x_y_c_r_v_sink_dir_List = x_y_c_r_v_sink_dir_List
         self.readExtent = readExtent
@@ -36,12 +37,10 @@ class RasterOverlay(QgsMapCanvasItem):
         print("=======> INITIALIZING RASTER OVERLAY3")
 
     def boundingRect(self):
-        print("=======> BOUNDING RECT")
-        top_left = self.toCanvasCoordinates(QgsPointXY(self.readExtent.xMinimum(), self.readExtent.yMaximum()))
-        bottom_right = self.toCanvasCoordinates(QgsPointXY(self.readExtent.xMaximum(), self.readExtent.yMinimum()))
-        bRect = QRectF(top_left, bottom_right)
-        print(f"=======> BOUNDING RECT2: {bRect}")
-        return bRect
+        # Must return a stable rect in local (canvas pixel) coords.
+        # Using toCanvasCoordinates() here would return different values after each
+        # pan/zoom, making Qt's scene BSP index stale and causing crashes on removeItem().
+        return QRectF(QPointF(0, 0), QSizeF(self._canvas.size()))
     
     def setFontSize(self, fontSize):
         self.fontSize = fontSize
