@@ -2,7 +2,7 @@
 name=klabclient
 qgisMinimumVersion=3.10
 author=G-ANT
-description=Request k.lab / ARIES observations on the current map view
+description=A simple k.lab Client based on klab-client-python
 version=1.0
 repository=https://github.com/g-ant-eu/qgis-plugins
 homepage=https://g-ant.eu
