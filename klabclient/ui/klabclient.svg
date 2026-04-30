@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- Globe -->
+  <circle cx="12" cy="12" r="10" fill="#1976D2" stroke="#0D47A1" stroke-width="0.8"/>
+  <!-- Longitude lines -->
+  <ellipse cx="12" cy="12" rx="4" ry="10" fill="none" stroke="white" stroke-width="0.6" opacity="0.6"/>
+  <ellipse cx="12" cy="12" rx="7.5" ry="10" fill="none" stroke="white" stroke-width="0.6" opacity="0.4"/>
+  <!-- Latitude lines -->
+  <line x1="2" y1="12" x2="22" y2="12" stroke="white" stroke-width="0.6" opacity="0.6"/>
+  <ellipse cx="12" cy="8"  rx="8.7" ry="2.2" fill="none" stroke="white" stroke-width="0.6" opacity="0.5"/>
+  <ellipse cx="12" cy="16" rx="8.7" ry="2.2" fill="none" stroke="white" stroke-width="0.6" opacity="0.5"/>
+  <!-- Target / crosshair overlay -->
+  <circle cx="12" cy="12" r="5.5" fill="none" stroke="#FF6F00" stroke-width="1.6"/>
+  <line x1="12" y1="8.5"  x2="12" y2="6.5"  stroke="#FF6F00" stroke-width="1.6" stroke-linecap="round"/>
+  <line x1="12" y1="15.5" x2="12" y2="17.5" stroke="#FF6F00" stroke-width="1.6" stroke-linecap="round"/>
+  <line x1="8.5"  y1="12" x2="6.5"  y2="12" stroke="#FF6F00" stroke-width="1.6" stroke-linecap="round"/>
+  <line x1="15.5" y1="12" x2="17.5" y2="12" stroke="#FF6F00" stroke-width="1.6" stroke-linecap="round"/>
+  <!-- Centre dot -->
+  <circle cx="12" cy="12" r="1.4" fill="#FF6F00"/>
+</svg>

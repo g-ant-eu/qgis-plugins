@@ -5,7 +5,7 @@ set -e
 rm -rf ./releases
 
 # Define plugin folders
-PLUGINS=("featurenavigator" "rasterfromvectorfieldloader" "geomorpheye")
+PLUGINS=("featurenavigator" "rasterfromvectorfieldloader" "geomorpheye" "klabclient")
 
 # Create releases directory
 RELEASE_DIR="releases"
