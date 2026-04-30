@@ -51,6 +51,8 @@ class KlabClientDialog(QDialog, Ui_Dialog):
         self.setWindowTitle("k.lab Client")
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
+        self.aboutLogoLabel.setPixmap(IconKlabClient.pixmap(128, 128))
+
         self._load_settings()
         self._connect_signals()
         self._update_extent_ui()
@@ -100,14 +102,14 @@ class KlabClientDialog(QDialog, Ui_Dialog):
         self.usernameEdit.setText(s.value("KlabClient/username", ""))
         self.passwordEdit.setText(s.value("KlabClient/password", ""))
         self.engineUrlEdit.setText(s.value("KlabClient/engine", ""))
-        self.observableEdit.setText(s.value("KlabClient/observable", "geography:Elevation"))
+        self.observableEdit.setPlainText(s.value("KlabClient/observable", "geography:Elevation"))
         self.yearSpinBox.setValue(int(s.value("KlabClient/year", 2010)))
         self.resolutionEdit.setText(s.value("KlabClient/resolution", "1 km"))
         self.exportFormatCombo.setCurrentIndex(0)  # always reset to placeholder
 
     def _save_observe_settings(self):
         s = QSettings()
-        s.setValue("KlabClient/observable", self.observableEdit.text())
+        s.setValue("KlabClient/observable", self.observableEdit.toPlainText().strip())
         s.setValue("KlabClient/year", self.yearSpinBox.value())
         s.setValue("KlabClient/resolution", self.resolutionEdit.text())
 
@@ -126,6 +128,7 @@ class KlabClientDialog(QDialog, Ui_Dialog):
         self.useMapViewCheckbox.toggled.connect(self._update_extent_ui)
         self.refreshExtentButton.clicked.connect(self._refresh_extent_from_map)
         self.submitButton.clicked.connect(self._on_submit)
+        self.stopButton.clicked.connect(self._on_stop)
         self.testConnectionButton.clicked.connect(self._on_test_connection)
         self.saveSettingsButton.clicked.connect(self._on_save_connection_settings)
 
@@ -251,7 +254,7 @@ class KlabClientDialog(QDialog, Ui_Dialog):
             iface.messageBar().pushWarning("k.lab Client", "An observation is already running.")
             return
 
-        observable = self.observableEdit.text().strip()
+        observable = self.observableEdit.toPlainText().strip()
         if not observable:
             iface.messageBar().pushWarning("k.lab Client", "Please enter an observable.")
             return
@@ -304,9 +307,18 @@ class KlabClientDialog(QDialog, Ui_Dialog):
     def _on_obs_worker_done(self):
         self._obs_worker = None
 
+    def _on_stop(self):
+        if self._obs_worker and self._obs_worker.isRunning():
+            self._obs_worker.stop()
+            if not self._obs_worker.wait(3000):
+                self._obs_worker.terminate()
+        self._set_running(False)
+        self.statusLabel.setText("Stopped")
+        self.logTextEdit.appendPlainText("Processing stopped by user.")
+
     def _set_running(self, running):
         self.submitButton.setEnabled(not running)
-        self.progressBar.setVisible(running)
+        self.progressWidget.setVisible(running)
         self.statusLabel.setText("Observing…" if running else "Ready")
 
     def _on_log(self, message):
@@ -314,7 +326,7 @@ class KlabClientDialog(QDialog, Ui_Dialog):
 
     def _on_observation_finished(self, file_path, layer_type):
         self._set_running(False)
-        observable = self.observableEdit.text().strip()
+        observable = self.observableEdit.toPlainText().strip()
         year = self.yearSpinBox.value()
         layer_name = f"{observable} ({year})"
 
@@ -348,6 +360,8 @@ class KlabClientDialog(QDialog, Ui_Dialog):
 
     def closeEvent(self, event):
         if self._obs_worker and self._obs_worker.isRunning():
-            self._obs_worker.quit()
-            self._obs_worker.wait(2000)
+            self._obs_worker.stop()
+            if not self._obs_worker.wait(2000):
+                self._obs_worker.terminate()
+        self._set_running(False)
         super().closeEvent(event)

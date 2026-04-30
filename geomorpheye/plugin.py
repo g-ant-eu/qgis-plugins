@@ -79,6 +79,7 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         self.cellBorderColorButton.colorChanged.connect(self.on_color_changed)
 
         self.rasterLayerCombobox.setFilters(QgsMapLayerType.Raster)
+        self.rasterLayerCombobox.layerChanged.connect(self._on_layer_changed)
         self.pushButtonLoad.clicked.connect(self.load_raster_info)
         self.pushButtonZoomTo.clicked.connect(self.zoom_to_cell)
         self.buttonBox.accepted.connect(self.on_accept)
@@ -317,6 +318,19 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
                     )
 
         return (x_y_c_r_v_sink_dir_List, readExtent, rasterXres, rasterYres, elevMin, elevMax)
+
+    # ------------------------------------------------------------------ #
+    #  Layer selection change                                             #
+    # ------------------------------------------------------------------ #
+
+    def _on_layer_changed(self, layer):
+        if not self.rasterOverlayItem:
+            return
+        self.cleanup_overlay()
+        self.pushButtonLoad.setText("Load On-Screen Raster Info")
+        self.reset_ui()
+        if layer and isinstance(layer, QgsRasterLayer):
+            self.load_raster_info()
 
     # ------------------------------------------------------------------ #
     #  Load / unload button                                               #

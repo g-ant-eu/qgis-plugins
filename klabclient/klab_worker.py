@@ -93,16 +93,28 @@ class KlabObservationWorker(QThread):
         self._resolution = resolution
         self._year = year
         self._export_format = export_format  # "auto" | "raster" | "vector"
+        self._cancelled = False
+        self._loop = None
+
+    def stop(self):
+        """Request cancellation of the running observation."""
+        self._cancelled = True
+        if self._loop and not self._loop.is_closed():
+            self._loop.call_soon_threadsafe(self._loop.stop)
 
     def run(self):
+        self._cancelled = False
         loop = asyncio.new_event_loop()
+        self._loop = loop
         asyncio.set_event_loop(loop)
         try:
             loop.run_until_complete(self._observe())
         except Exception as exc:
-            self.observationError.emit(f"Worker error: {exc}")
+            if not self._cancelled:
+                self.observationError.emit(f"Worker error: {exc}")
         finally:
             loop.close()
+            self._loop = None
 
     async def _observe(self):
         klab = None
