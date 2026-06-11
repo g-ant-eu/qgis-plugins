@@ -59,6 +59,7 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         viewColors  = self.isTrue(settings.value("GeomorphEye/viewColors", False))
         fontSize        = int(settings.value("GeomorphEye/fontSize", 14))
         cellBorderColor = settings.value("GeomorphEye/cellBorderColor", "#000000")
+        maxCells        = int(settings.value("GeomorphEye/maxCells", 10000))
 
         self.viewFlowCheckbox.setChecked(viewFlow)
         self.viewPitsCheckbox.setChecked(viewPit)
@@ -68,6 +69,7 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         self.viewColorsCheckbox.setChecked(viewColors)
         self.fontSizeSpinBox.setValue(fontSize)
         self.cellBorderColorButton.setColor(QColor(cellBorderColor))
+        self.maxCellsSpinBox.setValue(maxCells)
 
         self.viewFlowCheckbox.toggled.connect(self.on_checkbox_changed)
         self.viewPitsCheckbox.toggled.connect(self.on_checkbox_changed)
@@ -77,6 +79,7 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         self.viewColorsCheckbox.toggled.connect(self.on_checkbox_changed)
         self.fontSizeSpinBox.valueChanged.connect(self.on_fontsize_changed)
         self.cellBorderColorButton.colorChanged.connect(self.on_color_changed)
+        self.maxCellsSpinBox.valueChanged.connect(self.on_maxcells_changed)
 
         self.rasterLayerCombobox.setFilters(QgsMapLayerType.Raster)
         self.rasterLayerCombobox.layerChanged.connect(self._on_layer_changed)
@@ -160,6 +163,10 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         settings.setValue("GeomorphEye/cellBorderColor", self.cellBorderColorButton.color().name())
         if self.rasterOverlayItem:
             self.rasterOverlayItem.setBorderColor(self.cellBorderColorButton.color().name())
+
+    def on_maxcells_changed(self):
+        settings = QSettings()
+        settings.setValue("GeomorphEye/maxCells", self.maxCellsSpinBox.value())
 
     def zoom_to_cell(self):
         rasterLayer = self.rasterLayerCombobox.currentLayer()
@@ -258,7 +265,7 @@ class GeomorpheyePluginDialog(QDialog, Ui_Dialog):
         readCols   = int(readExtent.width()  / rasterXres)
         readRows   = int(readExtent.height() / rasterYres)
 
-        if readCols * readRows > 10000:
+        if readCols * readRows > self.maxCellsSpinBox.value():
             return None
 
         x_y_c_r_v_sink_dir_List = []
